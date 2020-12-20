@@ -1,0 +1,43 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:MonsterPyramid.Resources.Dictionarys">
+
+
+    <!--기본 텍스트 블럭 텍스트 사이즈-->
+    <Style TargetType="TextBlock" x:Key="TextBlock_textsize">
+        <Setter Property="FontSize" Value="15"/>
+    </Style>
+    
+    <!--기본 텍스트 블럭 텍스트 사이즈 + 텍스트 볼드체-->
+    <Style TargetType="TextBlock" BasedOn="{StaticResource  TextBlock_textsize}" x:Key="TextBlock_textbold">
+        <Setter Property="FontWeight" Value="Bold"/>
+    </Style>
+    
+    <!--말 이미지 - 페페-->
+    <BitmapImage x:Key="pepe_uri" UriSource="/MonsterPyramid;component/Resources/Images/Stones/pepe.png"/>
+    <!--말 이미지 - 핑크빈-->
+    <BitmapImage x:Key="pink_uri" UriSource="/MonsterPyramid;component/Resources/Images/Stones/pink.png"/>
+    <!--말 이미지 - 슬라임-->
+    <BitmapImage x:Key="slime_uri" UriSource="/MonsterPyramid;component/Resources/Images/Stones/slime.png"/>
+    <!--말 이미지 - 주황버섯-->
+    <BitmapImage x:Key="mush_uri" UriSource="/MonsterPyramid;component/Resources/Images/Stones/mush.png"/>
+    <!--말 이미지 - 옥토푸스-->
+    <BitmapImage x:Key="octo_uri" UriSource="/MonsterPyramid;component/Resources/Images/Stones/octo.png"/>
+    <!--말 이미지 - 스페셜-->
+    <BitmapImage x:Key="special_uri" UriSource="/MonsterPyramid;component/Resources/Images/Stones/special.png"/>
+
+    <!--말 아이콘 - 페페-->
+    <Image x:Key="pepe_icon_uri" Source="/MonsterPyramid;component/Resources/Images/Icons/pepe.ico"/>
+    <!--말 아이콘 - 핑크빈-->
+    <Image x:Key="pink_icon_uri" Source="/MonsterPyramid;component/Resources/Images/Icons/pink.ico"/>
+    <!--말 아이콘 - 슬라임-->
+    <Image x:Key="slime_icon_uri" Source="/MonsterPyramid;component/Resources/Images/Icons/slime.ico"/>
+    <!--말 아이콘 - 주황버섯-->
+    <Image x:Key="mush_icon_uri" Source="/MonsterPyramid;component/Resources/Images/Icons/mush.ico"/>
+    <!--말 아이콘 - 옥토푸스-->
+    <Image x:Key="octo_icon_uri" Source="/MonsterPyramid;component/Resources/Images/Icons/octo.ico"/>
+    <!--말 아이콘 - 스페셜-->
+    <Image x:Key="special_icon_uri" Source="/MonsterPyramid;component/Resources/Images/Icons/special.ico"/>
+
+
+</ResourceDictionary>

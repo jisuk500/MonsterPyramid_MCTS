@@ -1,0 +1,767 @@
+﻿<Window x:Class="MonsterPyramid.View.Main.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MonsterPyramid.View.Main"
+        xmlns:cvts="clr-namespace:MonsterPyramid.Resources.Converters.ValueConverters"
+        xmlns:enums ="clr-namespace:MonsterPyramid.Model"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="741" MinHeight="741" Width="744" MinWidth="744"
+        MouseDown="Window_MouseDown"
+        PreviewMouseDown="Window_PreviewMouseDown">
+    <Window.Resources>
+        <local:BindingProxy x:Key="Proxy" Data="{Binding}"/>
+        
+    </Window.Resources>
+
+    <DockPanel>
+        <DockPanel.Resources>
+            <ResourceDictionary>
+                <ResourceDictionary.MergedDictionaries>
+                    <ResourceDictionary Source="/MonsterPyramid;component/Resources/Dictionarys/MainWindowDic.xaml"/>
+                    <ResourceDictionary>
+                        <cvts:BoardIndexCvt x:Key="BoardIndextoPosConverter"/>
+                    </ResourceDictionary>
+                </ResourceDictionary.MergedDictionaries>
+            </ResourceDictionary>
+        </DockPanel.Resources>
+        
+        <!--맨 위 메뉴바-->
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="파일">
+                <MenuItem Header="새 게임"/>
+                <MenuItem Header="수 무르기"/>
+                <MenuItem Header="게임 저장"/>
+                <MenuItem Header="게임 불러오기"/>
+                <Separator/>
+                <MenuItem Header="종료"/>
+            </MenuItem>
+            <MenuItem Header="MCTS AI">
+                <MenuItem Header="계산시간">
+                    <MenuItem Header="1초"/>
+                    <MenuItem Header="2초"/>
+                    <MenuItem Header="3초"/>
+                    <MenuItem Header="4초"/>
+                    <MenuItem Header="5초"/>
+                </MenuItem>
+            </MenuItem>
+        </Menu>
+        
+        <!--게임 전체 UI 그리드-->
+        <Grid Margin="3" DockPanel.Dock="Top">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="1"/>
+                <ColumnDefinition Width="160"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="100"/>
+                <RowDefinition Height="1"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="1"/>
+                <RowDefinition Height="56"/>
+                <RowDefinition Height="1"/>
+                <RowDefinition Height="100"/>
+            </Grid.RowDefinitions>
+
+            <!--맨 윗줄 상단바 구분선-->
+            <Rectangle Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Fill="Gray" Margin="3,0,3,0"/>
+            <Rectangle Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="5" Fill="Gray" Margin="3,0,3,0"/>
+            <Rectangle Grid.Row="0" Grid.Column="1" Fill="gray" Margin="0,3,0,3" />
+            <Rectangle Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="5" Fill="Gray" Margin="3,0,3,0"/>
+            <Rectangle Grid.Row="2" Grid.Column="1" Fill="Gray" Margin="0,0,0,0"/>
+
+            <!--상단 왼쪽 그리드-->
+            <Grid Grid.Row="0" Grid.Column="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="30"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+
+                <!--게임로그 텍스트 블록 & 구분선-->
+                <TextBlock Text="게임로그" FontSize="18" TextWrapping="WrapWithOverflow" Margin="3,3,3,3"
+                           Width="30" VerticalAlignment="Center" HorizontalAlignment="Center" TextAlignment="Center"
+                           Grid.Row="0" Grid.Column="0" Grid.RowSpan="5"/>
+                <ListView Grid.Row="0" Grid.Column="1" ItemsSource="{Binding Path=curGameSession.playerActLogs}"
+                          Style="{StaticResource GameLog_listview}" 
+                          ItemContainerStyle="{StaticResource GameLog_listviewitem}"
+                          MouseDown="ListView_MouseDown" Name="listview_gamelog"/>
+                
+            </Grid>
+
+
+            <!--상단 오른쪽 점수표 그리드-->
+            <Grid Grid.Row="0" Grid.Column="3" >
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="40"/>
+                    <ColumnDefinition Width="1"/>
+                    <ColumnDefinition Width="30"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!--순위표 텍스트 블럭-->
+                <TextBlock Text="순&#10;위&#10;표" Grid.Row="0" Grid.Column="0" Grid.RowSpan="3" FontSize="20" TextWrapping="Wrap"
+                       HorizontalAlignment="Center" VerticalAlignment="Center" Style="{StaticResource TextBlock_textbold}"/>
+                <Rectangle Width="1" Margin="0,3,0,3" Fill="Gray" Grid.Row="0" Grid.Column="1" Grid.RowSpan="3"/>
+
+                <!--순위표 순위 숫자 텍스트 블럭-->
+                <TextBlock Text="1" Grid.Row="0" Grid.Column="2" Foreground="Red" Style="{StaticResource TextBlock_textbold}"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <TextBlock Text="2" Grid.Row="1" Grid.Column="2" Style="{StaticResource TextBlock_textbold}"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <TextBlock Text="3" Grid.Row="2" Grid.Column="2" Style="{StaticResource TextBlock_textbold}"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+                <!--순위표 플레이어 표시 텍스트 블럭-->
+                <TextBlock Grid.Row="0" Grid.Column="3" DataContext="{Binding Path=curGameSession.LeaderBoardDatas[0]}" Foreground="Red"
+                           Style="{StaticResource LeaderBoard_Player}"/>
+                <TextBlock Grid.Row="1" Grid.Column="3" DataContext="{Binding Path=curGameSession.LeaderBoardDatas[1]}"
+                           Style="{StaticResource LeaderBoard_Player}"/>
+                <TextBlock Grid.Row="2" Grid.Column="3" DataContext="{Binding Path=curGameSession.LeaderBoardDatas[2]}"
+                           Style="{StaticResource LeaderBoard_Player}"/>
+
+                <!--순위표 : 표시 텍스트 블럭-->
+                <TextBlock Text=":" Grid.Row="0" Grid.Column="4" Style="{StaticResource TextBlock_textbold}"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <TextBlock Text=":" Grid.Row="1" Grid.Column="4" Style="{StaticResource TextBlock_textbold}"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <TextBlock Text=":" Grid.Row="2" Grid.Column="4" Style="{StaticResource TextBlock_textbold}"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+                <!--순위표 플레이어 점수 표시 텍스트 블럭-->
+                <TextBlock Grid.Row="0" Grid.Column="5" DataContext="{Binding Path=curGameSession.LeaderBoardDatas[0]}" Foreground="Red"
+                           Style="{StaticResource LeaderBoard_Score}"/>
+                <TextBlock Grid.Row="1" Grid.Column="5" DataContext="{Binding Path=curGameSession.LeaderBoardDatas[1]}"
+                           Style="{StaticResource LeaderBoard_Score}"/>
+                <TextBlock Grid.Row="2" Grid.Column="5" DataContext="{Binding Path=curGameSession.LeaderBoardDatas[2]}"
+                           Style="{StaticResource LeaderBoard_Score}"/>
+            </Grid>
+
+            <!--중단부 왼쪽 보드판 표시기-->
+            <Rectangle Margin="3" Grid.Row="2" Grid.Column="0" Fill="DarkGray"/>
+            <Viewbox Grid.Row="2" Grid.Column="0" Stretch="Uniform" Margin="3" Name="XAML_PyramidCell_Viewbox">
+                <Grid Width="400" Height="400">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="10"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="10"/>
+                    </Grid.RowDefinitions>
+
+
+                    <!--1열 1개-->
+
+                    <Border Grid.Row="1" Grid.Column="8" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_border}"
+                            DataContext="{Binding Path=curGameSession.curBoardData.BoardCellState[35]}" Tag="35">
+                        <Image Style="{StaticResource BoardCell_image}"/>
+                    </Border>
+                    <Border Grid.Row="1" Grid.Column="8" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_clickborder}" Tag="35"
+                            MouseEnter="boardCell_MouseEnter" MouseLeave="boardCell_MouseLeave"
+                            MouseLeftButtonDown="boardCell_MouseLeftButtonDown"/>
+
+                    <!--2열 2개-->
+                    <Border Grid.Row="2" Grid.Column="7" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_border}"
+                            DataContext="{Binding Path=curGameSession.curBoardData.BoardCellState[33]}" Tag="33">
+                        <Image Style="{StaticResource BoardCell_image}"/>
+                    </Border>
+                    <Border Grid.Row="2" Grid.Column="7" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_clickborder}" Tag="33"
+                            MouseEnter="boardCell_MouseEnter" MouseLeave="boardCell_MouseLeave"
+                            MouseLeftButtonDown="boardCell_MouseLeftButtonDown"/>
+                    <Border Grid.Row="2" Grid.Column="9" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_border}"
+                            DataContext="{Binding Path=curGameSession.curBoardData.BoardCellState[34]}" Tag="34">
+                        <Image Style="{StaticResource BoardCell_image}"/>
+                    </Border>
+                    <Border Grid.Row="2" Grid.Column="9" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_clickborder}" Tag="34"
+                            MouseEnter="boardCell_MouseEnter" MouseLeave="boardCell_MouseLeave"
+                            MouseLeftButtonDown="boardCell_MouseLeftButtonDown"/>
+
+                    <!--3열 3개-->
+                    <Border Grid.Row="3" Grid.Column="6" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_border}"
+                            DataContext="{Binding Path=curGameSession.curBoardData.BoardCellState[30]}" Tag="30">
+                        <Image Style="{StaticResource BoardCell_image}"/>
+                    </Border>
+                    <Border Grid.Row="3" Grid.Column="6" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_clickborder}" Tag="30"
+                            MouseEnter="boardCell_MouseEnter" MouseLeave="boardCell_MouseLeave"
+                            MouseLeftButtonDown="boardCell_MouseLeftButtonDown"/>
+                    <Border Grid.Row="3" Grid.Column="8" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_border}"
+                            DataContext="{Binding Path=curGameSession.curBoardData.BoardCellState[31]}" Tag="31">
+                        <Image Style="{StaticResource BoardCell_image}"/>
+                    </Border>
+                    <Border Grid.Row="3" Grid.Column="8" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_clickborder}" Tag="31"
+                            MouseEnter="boardCell_MouseEnter" MouseLeave="boardCell_MouseLeave"
+                            MouseLeftButtonDown="boardCell_MouseLeftButtonDown"/>
+                    <Border Grid.Row="3" Grid.Column="10" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_border}"
+                            DataContext="{Binding Path=curGameSession.curBoardData.BoardCellState[32]}" Tag="32">
+                        <Image Style="{StaticResource BoardCell_image}"/>
+                    </Border>
+                    <Border Grid.Row="3" Grid.Column="10" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_clickborder}" Tag="32"
+                            MouseEnter="boardCell_MouseEnter" MouseLeave="boardCell_MouseLeave"
+                            MouseLeftButtonDown="boardCell_MouseLeftButtonDown"/>
+
+                    <!--4열 4개-->
+                    <Border Grid.Row="4" Grid.Column="5" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_border}"
+                            DataContext="{Binding Path=curGameSession.curBoardData.BoardCellState[26]}" Tag="26">
+                        <Image Style="{StaticResource BoardCell_image}"/>
+                    </Border>
+                    <Border Grid.Row="4" Grid.Column="5" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_clickborder}" Tag="26"
+                            MouseEnter="boardCell_MouseEnter" MouseLeave="boardCell_MouseLeave"
+                            MouseLeftButtonDown="boardCell_MouseLeftButtonDown"/>
+                    <Border Grid.Row="4" Grid.Column="7" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_border}"
+                            DataContext="{Binding Path=curGameSession.curBoardData.BoardCellState[27]}" Tag="27">
+                        <Image Style="{StaticResource BoardCell_image}"/>
+                    </Border>
+                    <Border Grid.Row="4" Grid.Column="7" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_clickborder}" Tag="27"
+                            MouseEnter="boardCell_MouseEnter" MouseLeave="boardCell_MouseLeave"
+                            MouseLeftButtonDown="boardCell_MouseLeftButtonDown"/>
+                    <Border Grid.Row="4" Grid.Column="9" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_border}"
+                            DataContext="{Binding Path=curGameSession.curBoardData.BoardCellState[28]}" Tag="28">
+                        <Image Style="{StaticResource BoardCell_image}"/>
+                    </Border>
+                    <Border Grid.Row="4" Grid.Column="9" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_clickborder}" Tag="28"
+                            MouseEnter="boardCell_MouseEnter" MouseLeave="boardCell_MouseLeave"
+                            MouseLeftButtonDown="boardCell_MouseLeftButtonDown"/>
+                    <Border Grid.Row="4" Grid.Column="11" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_border}"
+                            DataContext="{Binding Path=curGameSession.curBoardData.BoardCellState[29]}" Tag="29">
+                        <Image Style="{StaticResource BoardCell_image}"/>
+                    </Border>
+                    <Border Grid.Row="4" Grid.Column="11" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_clickborder}" Tag="29"
+                            MouseEnter="boardCell_MouseEnter" MouseLeave="boardCell_MouseLeave"
+                            MouseLeftButtonDown="boardCell_MouseLeftButtonDown"/>
+
+                    <!--5열 5개-->
+                    <Border Grid.Row="5" Grid.Column="4" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_border}"
+                            DataContext="{Binding Path=curGameSession.curBoardData.BoardCellState[21]}" Tag="21">
+                        <Image Style="{StaticResource BoardCell_image}"/>
+                    </Border>
+                    <Border Grid.Row="5" Grid.Column="4" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_clickborder}" Tag="21"
+                            MouseEnter="boardCell_MouseEnter" MouseLeave="boardCell_MouseLeave"
+                            MouseLeftButtonDown="boardCell_MouseLeftButtonDown"/>
+                    <Border Grid.Row="5" Grid.Column="6" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_border}"
+                            DataContext="{Binding Path=curGameSession.curBoardData.BoardCellState[22]}" Tag="22">
+                        <Image Style="{StaticResource BoardCell_image}"/>
+                    </Border>
+                    <Border Grid.Row="5" Grid.Column="6" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_clickborder}" Tag="22"
+                            MouseEnter="boardCell_MouseEnter" MouseLeave="boardCell_MouseLeave"
+                            MouseLeftButtonDown="boardCell_MouseLeftButtonDown"/>
+                    <Border Grid.Row="5" Grid.Column="8" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_border}"
+                            DataContext="{Binding Path=curGameSession.curBoardData.BoardCellState[23]}" Tag="23">
+                        <Image Style="{StaticResource BoardCell_image}"/>
+                    </Border>
+                    <Border Grid.Row="5" Grid.Column="8" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_clickborder}" Tag="23"
+                            MouseEnter="boardCell_MouseEnter" MouseLeave="boardCell_MouseLeave"
+                            MouseLeftButtonDown="boardCell_MouseLeftButtonDown"/>
+                    <Border Grid.Row="5" Grid.Column="10" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_border}"
+                            DataContext="{Binding Path=curGameSession.curBoardData.BoardCellState[24]}" Tag="24">
+                        <Image Style="{StaticResource BoardCell_image}"/>
+                    </Border>
+                    <Border Grid.Row="5" Grid.Column="10" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_clickborder}" Tag="24"
+                            MouseEnter="boardCell_MouseEnter" MouseLeave="boardCell_MouseLeave"
+                            MouseLeftButtonDown="boardCell_MouseLeftButtonDown"/>
+                    <Border Grid.Row="5" Grid.Column="12" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_border}"
+                            DataContext="{Binding Path=curGameSession.curBoardData.BoardCellState[25]}" Tag="25">
+                        <Image Style="{StaticResource BoardCell_image}"/>
+                    </Border>
+                    <Border Grid.Row="5" Grid.Column="12" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_clickborder}" Tag="25"
+                            MouseEnter="boardCell_MouseEnter" MouseLeave="boardCell_MouseLeave"
+                            MouseLeftButtonDown="boardCell_MouseLeftButtonDown"/>
+
+                    <!--6열 6개-->
+                    <Border Grid.Row="6" Grid.Column="3" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_border}"
+                            DataContext="{Binding Path=curGameSession.curBoardData.BoardCellState[15]}" Tag="15">
+                        <Image Style="{StaticResource BoardCell_image}"/>
+                    </Border>
+                    <Border Grid.Row="6" Grid.Column="3" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_clickborder}" Tag="15"
+                            MouseEnter="boardCell_MouseEnter" MouseLeave="boardCell_MouseLeave"
+                            MouseLeftButtonDown="boardCell_MouseLeftButtonDown"/>
+                    <Border Grid.Row="6" Grid.Column="5" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_border}"
+                            DataContext="{Binding Path=curGameSession.curBoardData.BoardCellState[16]}" Tag="16">
+                        <Image Style="{StaticResource BoardCell_image}"/>
+                    </Border>
+                    <Border Grid.Row="6" Grid.Column="5" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_clickborder}" Tag="16"
+                            MouseEnter="boardCell_MouseEnter" MouseLeave="boardCell_MouseLeave"
+                            MouseLeftButtonDown="boardCell_MouseLeftButtonDown"/>
+                    <Border Grid.Row="6" Grid.Column="7" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_border}"
+                            DataContext="{Binding Path=curGameSession.curBoardData.BoardCellState[17]}" Tag="17">
+                        <Image Style="{StaticResource BoardCell_image}"/>
+                    </Border>
+                    <Border Grid.Row="6" Grid.Column="7" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_clickborder}" Tag="17"
+                            MouseEnter="boardCell_MouseEnter" MouseLeave="boardCell_MouseLeave"
+                            MouseLeftButtonDown="boardCell_MouseLeftButtonDown"/>
+                    <Border Grid.Row="6" Grid.Column="9" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_border}"
+                            DataContext="{Binding Path=curGameSession.curBoardData.BoardCellState[18]}" Tag="18">
+                        <Image Style="{StaticResource BoardCell_image}"/>
+                    </Border>
+                    <Border Grid.Row="6" Grid.Column="9" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_clickborder}" Tag="18"
+                            MouseEnter="boardCell_MouseEnter" MouseLeave="boardCell_MouseLeave"
+                            MouseLeftButtonDown="boardCell_MouseLeftButtonDown"/>
+                    <Border Grid.Row="6" Grid.Column="11" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_border}"
+                            DataContext="{Binding Path=curGameSession.curBoardData.BoardCellState[19]}" Tag="19">
+                        <Image Style="{StaticResource BoardCell_image}"/>
+                    </Border>
+                    <Border Grid.Row="6" Grid.Column="11" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_clickborder}" Tag="19"
+                            MouseEnter="boardCell_MouseEnter" MouseLeave="boardCell_MouseLeave"
+                            MouseLeftButtonDown="boardCell_MouseLeftButtonDown"/>
+                    <Border Grid.Row="6" Grid.Column="13" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_border}"
+                            DataContext="{Binding Path=curGameSession.curBoardData.BoardCellState[20]}" Tag="20">
+                        <Image Style="{StaticResource BoardCell_image}"/>
+                    </Border>
+                    <Border Grid.Row="6" Grid.Column="13" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_clickborder}" Tag="20"
+                            MouseEnter="boardCell_MouseEnter" MouseLeave="boardCell_MouseLeave"
+                            MouseLeftButtonDown="boardCell_MouseLeftButtonDown"/>
+
+                    <!--7열 7개-->
+                    <Border Grid.Row="7" Grid.Column="2" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_border}"
+                            DataContext="{Binding Path=curGameSession.curBoardData.BoardCellState[8]}" Tag="8">
+                        <Image Style="{StaticResource BoardCell_image}"/>
+                    </Border>
+                    <Border Grid.Row="7" Grid.Column="2" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_clickborder}" Tag="8"
+                            MouseEnter="boardCell_MouseEnter" MouseLeave="boardCell_MouseLeave"
+                            MouseLeftButtonDown="boardCell_MouseLeftButtonDown"/>
+                    <Border Grid.Row="7" Grid.Column="4" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_border}"
+                            DataContext="{Binding Path=curGameSession.curBoardData.BoardCellState[9]}" Tag="9">
+                        <Image Style="{StaticResource BoardCell_image}"/>
+                    </Border>
+                    <Border Grid.Row="7" Grid.Column="4" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_clickborder}" Tag="9"
+                            MouseEnter="boardCell_MouseEnter" MouseLeave="boardCell_MouseLeave"
+                            MouseLeftButtonDown="boardCell_MouseLeftButtonDown"/>
+                    <Border Grid.Row="7" Grid.Column="6" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_border}"
+                            DataContext="{Binding Path=curGameSession.curBoardData.BoardCellState[10]}" Tag="10">
+                        <Image Style="{StaticResource BoardCell_image}"/>
+                    </Border>
+                    <Border Grid.Row="7" Grid.Column="6" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_clickborder}" Tag="10"
+                            MouseEnter="boardCell_MouseEnter" MouseLeave="boardCell_MouseLeave"
+                            MouseLeftButtonDown="boardCell_MouseLeftButtonDown"/>
+                    <Border Grid.Row="7" Grid.Column="8" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_border}"
+                            DataContext="{Binding Path=curGameSession.curBoardData.BoardCellState[11]}" Tag="11">
+                        <Image Style="{StaticResource BoardCell_image}"/>
+                    </Border>
+                    <Border Grid.Row="7" Grid.Column="8" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_clickborder}" Tag="11"
+                            MouseEnter="boardCell_MouseEnter" MouseLeave="boardCell_MouseLeave"
+                            MouseLeftButtonDown="boardCell_MouseLeftButtonDown"/>
+                    <Border Grid.Row="7" Grid.Column="10" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_border}"
+                            DataContext="{Binding Path=curGameSession.curBoardData.BoardCellState[12]}" Tag="12">
+                        <Image Style="{StaticResource BoardCell_image}"/>
+                    </Border>
+                    <Border Grid.Row="7" Grid.Column="10" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_clickborder}" Tag="12"
+                            MouseEnter="boardCell_MouseEnter" MouseLeave="boardCell_MouseLeave"
+                            MouseLeftButtonDown="boardCell_MouseLeftButtonDown"/>
+                    <Border Grid.Row="7" Grid.Column="12" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_border}"
+                            DataContext="{Binding Path=curGameSession.curBoardData.BoardCellState[13]}" Tag="13">
+                        <Image Style="{StaticResource BoardCell_image}"/>
+                    </Border>
+                    <Border Grid.Row="7" Grid.Column="12" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_clickborder}" Tag="13"
+                            MouseEnter="boardCell_MouseEnter" MouseLeave="boardCell_MouseLeave"
+                            MouseLeftButtonDown="boardCell_MouseLeftButtonDown"/>
+                    <Border Grid.Row="7" Grid.Column="14" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_border}"
+                            DataContext="{Binding Path=curGameSession.curBoardData.BoardCellState[14]}" Tag="14">
+                        <Image Style="{StaticResource BoardCell_image}"/>
+                    </Border>
+                    <Border Grid.Row="7" Grid.Column="14" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_clickborder}" Tag="14"
+                            MouseEnter="boardCell_MouseEnter" MouseLeave="boardCell_MouseLeave"
+                            MouseLeftButtonDown="boardCell_MouseLeftButtonDown"/>
+
+                    <!--8열 8개-->
+                    <Border Grid.Row="8" Grid.Column="1" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_border}"
+                            DataContext="{Binding Path=curGameSession.curBoardData.BoardCellState[0]}" Tag="0">
+                        <Image Style="{StaticResource BoardCell_image}"/>
+                    </Border>
+                    <Border Grid.Row="8" Grid.Column="1" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_clickborder}" Tag="0"
+                            MouseEnter="boardCell_MouseEnter" MouseLeave="boardCell_MouseLeave"
+                            MouseLeftButtonDown="boardCell_MouseLeftButtonDown"/>
+                    <Border Grid.Row="8" Grid.Column="3" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_border}"
+                            DataContext="{Binding Path=curGameSession.curBoardData.BoardCellState[1]}" Tag="1">
+                        <Image Style="{StaticResource BoardCell_image}"/>
+                    </Border>
+                    <Border Grid.Row="8" Grid.Column="3" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_clickborder}" Tag="1"
+                            MouseEnter="boardCell_MouseEnter" MouseLeave="boardCell_MouseLeave"
+                            MouseLeftButtonDown="boardCell_MouseLeftButtonDown"/>
+                    <Border Grid.Row="8" Grid.Column="5" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_border}"
+                            DataContext="{Binding Path=curGameSession.curBoardData.BoardCellState[2]}" Tag="2">
+                        <Image Style="{StaticResource BoardCell_image}"/>
+                    </Border>
+                    <Border Grid.Row="8" Grid.Column="5" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_clickborder}" Tag="2"
+                            MouseEnter="boardCell_MouseEnter" MouseLeave="boardCell_MouseLeave"
+                            MouseLeftButtonDown="boardCell_MouseLeftButtonDown"/>
+                    <Border Grid.Row="8" Grid.Column="7" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_border}"
+                            DataContext="{Binding Path=curGameSession.curBoardData.BoardCellState[3]}" Tag="3">
+                        <Image Style="{StaticResource BoardCell_image}"/>
+                    </Border>
+                    <Border Grid.Row="8" Grid.Column="7" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_clickborder}" Tag="3"
+                            MouseEnter="boardCell_MouseEnter" MouseLeave="boardCell_MouseLeave"
+                            MouseLeftButtonDown="boardCell_MouseLeftButtonDown"/>
+                    <Border Grid.Row="8" Grid.Column="9" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_border}"
+                            DataContext="{Binding Path=curGameSession.curBoardData.BoardCellState[4]}" Tag="4">
+                        <Image Style="{StaticResource BoardCell_image}"/>
+                    </Border>
+                    <Border Grid.Row="8" Grid.Column="9" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_clickborder}" Tag="4"
+                            MouseEnter="boardCell_MouseEnter" MouseLeave="boardCell_MouseLeave"
+                            MouseLeftButtonDown="boardCell_MouseLeftButtonDown"/>
+                    <Border Grid.Row="8" Grid.Column="11" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_border}"
+                            DataContext="{Binding Path=curGameSession.curBoardData.BoardCellState[5]}" Tag="5">
+                        <Image Style="{StaticResource BoardCell_image}"/>
+                    </Border>
+                    <Border Grid.Row="8" Grid.Column="11" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_clickborder}" Tag="5"
+                            MouseEnter="boardCell_MouseEnter" MouseLeave="boardCell_MouseLeave"
+                            MouseLeftButtonDown="boardCell_MouseLeftButtonDown"/>
+                    <Border Grid.Row="8" Grid.Column="13" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_border}"
+                            DataContext="{Binding Path=curGameSession.curBoardData.BoardCellState[6]}" Tag="6">
+                        <Image Style="{StaticResource BoardCell_image}"/>
+                    </Border>
+                    <Border Grid.Row="8" Grid.Column="13" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_clickborder}" Tag="6"
+                            MouseEnter="boardCell_MouseEnter" MouseLeave="boardCell_MouseLeave"
+                            MouseLeftButtonDown="boardCell_MouseLeftButtonDown"/>
+                    <Border Grid.Row="8" Grid.Column="15" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_border}"
+                            DataContext="{Binding Path=curGameSession.curBoardData.BoardCellState[7]}" Tag="7">
+                        <Image Style="{StaticResource BoardCell_image}"/>
+                    </Border>
+                    <Border Grid.Row="8" Grid.Column="15" Grid.ColumnSpan="2" Style="{StaticResource BoardCell_clickborder}" Tag="7"
+                            MouseEnter="boardCell_MouseEnter" MouseLeave="boardCell_MouseLeave"
+                            MouseLeftButtonDown="boardCell_MouseLeftButtonDown"/>
+                </Grid>
+            </Viewbox>
+            
+            <!--중단부 오른쪽 플레이어 정보 표시기-->
+            <Grid Grid.Row="2" Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="40"/>
+                    <RowDefinition Height="1"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="1"/>
+                    <RowDefinition Height="40"/>
+                    <RowDefinition Height="1"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="1"/>
+                    <RowDefinition Height="40"/>
+                    <RowDefinition Height="1"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="40"/>
+                    <ColumnDefinition Width="1"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!--구분선-->
+                <Rectangle Height="1" Margin="0" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Fill="Gray"/>
+                <Rectangle Height="1" Margin="0" Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="3" Fill="Gray"/>
+
+                <Rectangle Width="1" Margin="0,3,0,3" Fill="Gray" Grid.Row="0" Grid.Column="1" Grid.RowSpan="3"/>
+                <Rectangle Width="1" Margin="0,3,0,3" Fill="Gray" Grid.Row="4" Grid.Column="1" Grid.RowSpan="3"/>
+                <Rectangle Width="1" Margin="0,3,0,3" Fill="Gray" Grid.Row="8" Grid.Column="1" Grid.RowSpan="3"/>
+
+
+                <!--플레이어 보더선-->
+                <Border Grid.Row="0" Grid.Column="0" DataContext="{Binding Path=curGameSession.playerDatas[0]}"
+                        Style="{StaticResource PlayerIndicator_Border}" Tag="0"
+                        MouseEnter="PlayerBorder_MouseEnter" MouseLeave="PlayerBorder_MouseLeave" MouseLeftButtonDown="PlayerBorder_MouseLeftButtonDown">
+                    <TextBlock Style="{StaticResource PlayerIndicator_Textblock}"/>
+                </Border>
+
+                <Border Grid.Row="4" Grid.Column="0" DataContext="{Binding Path=curGameSession.playerDatas[1]}"
+                        Style="{StaticResource PlayerIndicator_Border}" Tag="1"
+                        MouseEnter="PlayerBorder_MouseEnter" MouseLeave="PlayerBorder_MouseLeave" MouseLeftButtonDown="PlayerBorder_MouseLeftButtonDown">
+                    <TextBlock Style="{StaticResource PlayerIndicator_Textblock}"/>
+                </Border>
+
+                <Border Grid.Row="8" Grid.Column="0" DataContext="{Binding Path=curGameSession.playerDatas[2]}"
+                        Style="{StaticResource PlayerIndicator_Border}" Tag="2"
+                        MouseEnter="PlayerBorder_MouseEnter" MouseLeave="PlayerBorder_MouseLeave" MouseLeftButtonDown="PlayerBorder_MouseLeftButtonDown">
+                    <TextBlock Style="{StaticResource PlayerIndicator_Textblock}"/>
+                </Border>
+
+                <!--플레이어 남은 말 횟수 카운트 텍스트 블록-->
+                <TextBlock Grid.Row="2" Grid.Column="0" DataContext="{Binding Path=curGameSession.playerDatas[0]}"
+                           Style="{StaticResource LeftStoneCount_textblock}"/>
+                <TextBlock Grid.Row="6" Grid.Column="0" DataContext="{Binding Path=curGameSession.playerDatas[1]}"
+                           Style="{StaticResource LeftStoneCount_textblock}"/>
+                <TextBlock Grid.Row="10" Grid.Column="0" DataContext="{Binding Path=curGameSession.playerDatas[2]}"
+                           Style="{StaticResource LeftStoneCount_textblock}"/>
+
+                <!--플레이어 특이사항 텍스트블럭-->
+                <TextBlock Grid.Row="0" Grid.Column="2" Style="{StaticResource StoneHave_textblock}"/>
+                <TextBlock Grid.Row="4" Grid.Column="2" Style="{StaticResource StoneHave_textblock}"/>
+                <TextBlock Grid.Row="8" Grid.Column="2" Style="{StaticResource StoneHave_textblock}"/>
+
+                <!--플레이어 특이사항 워랩패널 1-->
+                <WrapPanel Grid.Row="2" Grid.Column="3" DataContext="{Binding Path=curGameSession.playerDatas[0]}">
+                    <StackPanel Style="{StaticResource PlayerSpecification_stackpanel}" DataContext="{Binding Path=StonePossesionInfo[0]}">
+                        <Image Source="/MonsterPyramid;component/Resources/Images/Stones/pepe.png" Width="27"/>
+                        <TextBlock Style="{StaticResource PlayerSpecification_textblock}"/>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource PlayerSpecification_stackpanel}" DataContext="{Binding Path=StonePossesionInfo[1]}">
+                        <Image Source="/MonsterPyramid;component/Resources/Images/Stones/pink.png" Width="27"/>
+                        <TextBlock Style="{StaticResource PlayerSpecification_textblock}"/>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource PlayerSpecification_stackpanel}" DataContext="{Binding Path=StonePossesionInfo[2]}">
+                        <Image Source="/MonsterPyramid;component/Resources/Images/Stones/slime.png" Width="27"/>
+                        <TextBlock Style="{StaticResource PlayerSpecification_textblock}"/>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource PlayerSpecification_stackpanel}" DataContext="{Binding Path=StonePossesionInfo[3]}">
+                        <Image Source="/MonsterPyramid;component/Resources/Images/Stones/mush.png" Width="27"/>
+                        <TextBlock Style="{StaticResource PlayerSpecification_textblock}"/>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource PlayerSpecification_stackpanel}" DataContext="{Binding Path=StonePossesionInfo[4]}">
+                        <Image Source="/MonsterPyramid;component/Resources/Images/Stones/octo.png" Width="27"/>
+                        <TextBlock Style="{StaticResource PlayerSpecification_textblock}"/>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource PlayerSpecification_stackpanel}" DataContext="{Binding Path=StonePossesionInfo[5]}">
+                        <Image Source="/MonsterPyramid;component/Resources/Images/Stones/special.png" Width="27"/>
+                        <TextBlock Style="{StaticResource PlayerSpecification_textblock}"/>
+                    </StackPanel>
+                </WrapPanel>
+                <!--플레이어 특이사항 워랩패널 2-->
+                <WrapPanel Grid.Row="6" Grid.Column="3" DataContext="{Binding Path=curGameSession.playerDatas[1]}">
+                    <StackPanel Style="{StaticResource PlayerSpecification_stackpanel}" DataContext="{Binding Path=StonePossesionInfo[0]}">
+                        <Image Source="/MonsterPyramid;component/Resources/Images/Stones/pepe.png" Width="27"/>
+                        <TextBlock Style="{StaticResource PlayerSpecification_textblock}"/>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource PlayerSpecification_stackpanel}" DataContext="{Binding Path=StonePossesionInfo[1]}">
+                        <Image Source="/MonsterPyramid;component/Resources/Images/Stones/pink.png" Width="27"/>
+                        <TextBlock Style="{StaticResource PlayerSpecification_textblock}"/>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource PlayerSpecification_stackpanel}" DataContext="{Binding Path=StonePossesionInfo[2]}">
+                        <Image Source="/MonsterPyramid;component/Resources/Images/Stones/slime.png" Width="27"/>
+                        <TextBlock Style="{StaticResource PlayerSpecification_textblock}"/>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource PlayerSpecification_stackpanel}" DataContext="{Binding Path=StonePossesionInfo[3]}">
+                        <Image Source="/MonsterPyramid;component/Resources/Images/Stones/mush.png" Width="27"/>
+                        <TextBlock Style="{StaticResource PlayerSpecification_textblock}"/>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource PlayerSpecification_stackpanel}" DataContext="{Binding Path=StonePossesionInfo[4]}">
+                        <Image Source="/MonsterPyramid;component/Resources/Images/Stones/octo.png" Width="27"/>
+                        <TextBlock Style="{StaticResource PlayerSpecification_textblock}"/>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource PlayerSpecification_stackpanel}" DataContext="{Binding Path=StonePossesionInfo[5]}">
+                        <Image Source="/MonsterPyramid;component/Resources/Images/Stones/special.png" Width="27"/>
+                        <TextBlock Style="{StaticResource PlayerSpecification_textblock}"/>
+                    </StackPanel>
+                </WrapPanel>
+                <!--플레이어 특이사항 워랩패널 3-->
+                <WrapPanel Grid.Row="10" Grid.Column="3" DataContext="{Binding Path=curGameSession.playerDatas[2]}">
+                    <StackPanel Style="{StaticResource PlayerSpecification_stackpanel}" DataContext="{Binding Path=StonePossesionInfo[0]}">
+                        <Image Source="/MonsterPyramid;component/Resources/Images/Stones/pepe.png" Width="27"/>
+                        <TextBlock Style="{StaticResource PlayerSpecification_textblock}"/>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource PlayerSpecification_stackpanel}" DataContext="{Binding Path=StonePossesionInfo[1]}">
+                        <Image Source="/MonsterPyramid;component/Resources/Images/Stones/pink.png" Width="27"/>
+                        <TextBlock Style="{StaticResource PlayerSpecification_textblock}"/>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource PlayerSpecification_stackpanel}" DataContext="{Binding Path=StonePossesionInfo[2]}">
+                        <Image Source="/MonsterPyramid;component/Resources/Images/Stones/slime.png" Width="27"/>
+                        <TextBlock Style="{StaticResource PlayerSpecification_textblock}"/>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource PlayerSpecification_stackpanel}" DataContext="{Binding Path=StonePossesionInfo[3]}">
+                        <Image Source="/MonsterPyramid;component/Resources/Images/Stones/mush.png" Width="27"/>
+                        <TextBlock Style="{StaticResource PlayerSpecification_textblock}"/>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource PlayerSpecification_stackpanel}" DataContext="{Binding Path=StonePossesionInfo[4]}">
+                        <Image Source="/MonsterPyramid;component/Resources/Images/Stones/octo.png" Width="27"/>
+                        <TextBlock Style="{StaticResource PlayerSpecification_textblock}"/>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource PlayerSpecification_stackpanel}" DataContext="{Binding Path=StonePossesionInfo[5]}">
+                        <Image Source="/MonsterPyramid;component/Resources/Images/Stones/special.png" Width="27"/>
+                        <TextBlock Style="{StaticResource PlayerSpecification_textblock}"/>
+                    </StackPanel>
+                </WrapPanel>
+
+            </Grid>
+
+            <!--하단부 나의 말 표시기-->
+            <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal" >
+                <Border Width="50" BorderBrush="Gray" BorderThickness="1" Margin="3,3,0,3" DataContext="{Binding Path=curGameSession.myStones[0]}"
+                        MouseEnter="MyStonesImage_MouseEnter" MouseLeave="MyStonesImage_MouseLeave" 
+                           MouseLeftButtonDown="MyStonesImage_MouseLeftButtonDown">
+                    <Image Tag="1" Style="{StaticResource MyStoneIndicator_image}"/>
+                </Border>
+                <Border Width="50" BorderBrush="Gray" BorderThickness="1" Margin="-1,3,0,3" DataContext="{Binding Path=curGameSession.myStones[1]}"
+                        MouseEnter="MyStonesImage_MouseEnter" MouseLeave="MyStonesImage_MouseLeave" 
+                           MouseLeftButtonDown="MyStonesImage_MouseLeftButtonDown">
+                    <Image Tag="2" Style="{StaticResource MyStoneIndicator_image}"/>
+                </Border>
+                <Border Width="50" BorderBrush="Gray" BorderThickness="1" Margin="-1,3,0,3" DataContext="{Binding Path=curGameSession.myStones[2]}"
+                        MouseEnter="MyStonesImage_MouseEnter" MouseLeave="MyStonesImage_MouseLeave" 
+                           MouseLeftButtonDown="MyStonesImage_MouseLeftButtonDown">
+                    <Image Tag="3" Style="{StaticResource MyStoneIndicator_image}"/>
+                </Border>
+                <Border Width="50" BorderBrush="Gray" BorderThickness="1" Margin="-1,3,0,3" DataContext="{Binding Path=curGameSession.myStones[3]}"
+                        MouseEnter="MyStonesImage_MouseEnter" MouseLeave="MyStonesImage_MouseLeave" 
+                           MouseLeftButtonDown="MyStonesImage_MouseLeftButtonDown">
+                    <Image Tag="4" Style="{StaticResource MyStoneIndicator_image}"/>
+                </Border>
+                <Border Width="50" BorderBrush="Gray" BorderThickness="1" Margin="-1,3,0,3" DataContext="{Binding Path=curGameSession.myStones[4]}"
+                        MouseEnter="MyStonesImage_MouseEnter" MouseLeave="MyStonesImage_MouseLeave" 
+                           MouseLeftButtonDown="MyStonesImage_MouseLeftButtonDown">
+                    <Image Tag="5" Style="{StaticResource MyStoneIndicator_image}"/>
+                </Border>
+                <Border Width="50" BorderBrush="Gray" BorderThickness="1" Margin="-1,3,0,3" DataContext="{Binding Path=curGameSession.myStones[5]}"
+                        MouseEnter="MyStonesImage_MouseEnter" MouseLeave="MyStonesImage_MouseLeave" 
+                           MouseLeftButtonDown="MyStonesImage_MouseLeftButtonDown">
+                    <Image Tag="6" Style="{StaticResource MyStoneIndicator_image}"/>
+                </Border>
+                <Border Width="50" BorderBrush="Gray" BorderThickness="1" Margin="-1,3,0,3" DataContext="{Binding Path=curGameSession.myStones[6]}"
+                        MouseEnter="MyStonesImage_MouseEnter" MouseLeave="MyStonesImage_MouseLeave" 
+                           MouseLeftButtonDown="MyStonesImage_MouseLeftButtonDown">
+                    <Image Tag="7" Style="{StaticResource MyStoneIndicator_image}"/>
+                </Border>
+                <Border Width="50" BorderBrush="Gray" BorderThickness="1" Margin="-1,3,0,3" DataContext="{Binding Path=curGameSession.myStones[7]}"
+                        MouseEnter="MyStonesImage_MouseEnter" MouseLeave="MyStonesImage_MouseLeave" 
+                           MouseLeftButtonDown="MyStonesImage_MouseLeftButtonDown">
+                    <Image Tag="8" Style="{StaticResource MyStoneIndicator_image}"/>
+                </Border>
+                <Border Width="50" BorderBrush="Gray" BorderThickness="1" Margin="-1,3,0,3" DataContext="{Binding Path=curGameSession.myStones[8]}"
+                        MouseEnter="MyStonesImage_MouseEnter" MouseLeave="MyStonesImage_MouseLeave" 
+                           MouseLeftButtonDown="MyStonesImage_MouseLeftButtonDown">
+                    <Image Tag="9" Style="{StaticResource MyStoneIndicator_image}"/>
+                </Border>
+                <Border Width="50" BorderBrush="Gray" BorderThickness="1" Margin="-1,3,0,3" DataContext="{Binding Path=curGameSession.myStones[9]}"
+                        MouseEnter="MyStonesImage_MouseEnter" MouseLeave="MyStonesImage_MouseLeave" 
+                           MouseLeftButtonDown="MyStonesImage_MouseLeftButtonDown">
+                    <Image Tag="10" Style="{StaticResource MyStoneIndicator_image}"/>
+                </Border>
+                <Border Width="50" BorderBrush="Gray" BorderThickness="1" Margin="-1,3,0,3" DataContext="{Binding Path=curGameSession.myStones[10]}"
+                        MouseEnter="MyStonesImage_MouseEnter" MouseLeave="MyStonesImage_MouseLeave" 
+                           MouseLeftButtonDown="MyStonesImage_MouseLeftButtonDown">
+                    <Image Tag="11" Style="{StaticResource MyStoneIndicator_image}"/>
+                </Border>
+                <Border Width="50" BorderBrush="Gray" BorderThickness="1" Margin="-1,3,0,3" DataContext="{Binding Path=curGameSession.myStones[11]}"
+                        MouseEnter="MyStonesImage_MouseEnter" MouseLeave="MyStonesImage_MouseLeave" 
+                           MouseLeftButtonDown="MyStonesImage_MouseLeftButtonDown">
+                    <Image Tag="12" Style="{StaticResource MyStoneIndicator_image}"/>
+                </Border>
+
+            </StackPanel>
+            <StackPanel  Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Rectangle Width="1" Margin="3,3,3,3" Fill="Gray"/>
+                <TextBlock Width="112" Margin="3" Style="{StaticResource currentState_textblock}"/>
+            </StackPanel>
+
+
+
+            <Grid Grid.Column="0" Grid.Row="6" Grid.ColumnSpan="5">
+                <!--맨 아래 하단부 그리드-->
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="120"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="1"/>
+                    <ColumnDefinition Width="120"/>
+                    <ColumnDefinition Width="120"/>
+                    <ColumnDefinition Width="120"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Text="타 플레이어 남은 말 개수" TextWrapping="Wrap" 
+                       VerticalAlignment="Center" HorizontalAlignment="Center"
+                       FontSize="20" FontWeight="Bold" Name="debug_text"/>
+
+                <StackPanel Grid.Row="0" Grid.Column="1" Style="{StaticResource stackpanel_cc_horizontal}" Margin="3">
+                    <Image Margin="3" Source="{StaticResource pepe_uri}" Tag="{x:Static enums:Stones.Pepe}"
+                           DataContext="{Binding Path=curGameSession.curStonesLeftInfo[0]}" Style="{StaticResource LeftStoneIndicator_image}"
+                           MouseEnter="LeftStoneImage_MouseEnter" MouseLeave="LeftStoneImage_MouseLeave" 
+                           MouseLeftButtonDown="LeftStoneImage_MouseLeftButtonDown"
+                           MouseRightButtonDown="LeftStoneImage_MouseRightButtonDown"/>
+                    <TextBlock Style="{StaticResource LeftStonesIndicator_textblock}" 
+                               DataContext="{Binding Path=curGameSession.curStonesLeftInfo[0]}"/>
+                </StackPanel>
+                <StackPanel Grid.Row="0" Grid.Column="2" Style="{StaticResource stackpanel_cc_horizontal}" Margin="3">
+                    <Image Margin="3" Source="{StaticResource pink_uri}" Tag="{x:Static enums:Stones.Pink}"
+                           DataContext="{Binding Path=curGameSession.curStonesLeftInfo[1]}" Style="{StaticResource LeftStoneIndicator_image}"
+                           MouseEnter="LeftStoneImage_MouseEnter" MouseLeave="LeftStoneImage_MouseLeave" 
+                           MouseLeftButtonDown="LeftStoneImage_MouseLeftButtonDown"
+                           MouseRightButtonDown="LeftStoneImage_MouseRightButtonDown"/>
+                    <TextBlock Style="{StaticResource LeftStonesIndicator_textblock}"
+                               DataContext="{Binding Path=curGameSession.curStonesLeftInfo[1]}"/>
+                </StackPanel>
+                <StackPanel Grid.Row="0" Grid.Column="3" Style="{StaticResource stackpanel_cc_horizontal}" Margin="3">
+                    <Image Margin="3" Source="{StaticResource slime_uri}" Tag="{x:Static enums:Stones.Slime}"
+                           DataContext="{Binding Path=curGameSession.curStonesLeftInfo[2]}" Style="{StaticResource LeftStoneIndicator_image}"
+                           MouseEnter="LeftStoneImage_MouseEnter" MouseLeave="LeftStoneImage_MouseLeave" 
+                           MouseLeftButtonDown="LeftStoneImage_MouseLeftButtonDown"
+                           MouseRightButtonDown="LeftStoneImage_MouseRightButtonDown"/>
+                    <TextBlock Style="{StaticResource LeftStonesIndicator_textblock}"
+                               DataContext="{Binding Path=curGameSession.curStonesLeftInfo[2]}"/>
+                </StackPanel>
+                <StackPanel Grid.Row="1" Grid.Column="1" Style="{StaticResource stackpanel_cc_horizontal}" Margin="3">
+                    <Image Margin="3" Source="{StaticResource mush_uri}" Tag="{x:Static enums:Stones.Mush}"
+                           DataContext="{Binding Path=curGameSession.curStonesLeftInfo[3]}" Style="{StaticResource LeftStoneIndicator_image}"
+                           MouseEnter="LeftStoneImage_MouseEnter" MouseLeave="LeftStoneImage_MouseLeave" 
+                           MouseLeftButtonDown="LeftStoneImage_MouseLeftButtonDown"
+                           MouseRightButtonDown="LeftStoneImage_MouseRightButtonDown"/>
+                    <TextBlock Style="{StaticResource LeftStonesIndicator_textblock}"
+                               DataContext="{Binding Path=curGameSession.curStonesLeftInfo[3]}"/>
+                </StackPanel>
+                <StackPanel Grid.Row="1" Grid.Column="2" Style="{StaticResource stackpanel_cc_horizontal}" Margin="3">
+                    <Image Margin="3" Source="{StaticResource octo_uri}" Tag="{x:Static enums:Stones.Octo}"
+                           DataContext="{Binding Path=curGameSession.curStonesLeftInfo[4]}" Style="{StaticResource LeftStoneIndicator_image}"
+                           MouseEnter="LeftStoneImage_MouseEnter" MouseLeave="LeftStoneImage_MouseLeave" 
+                           MouseLeftButtonDown="LeftStoneImage_MouseLeftButtonDown"
+                           MouseRightButtonDown="LeftStoneImage_MouseRightButtonDown"/>
+                    <TextBlock Style="{StaticResource LeftStonesIndicator_textblock}"
+                               DataContext="{Binding Path=curGameSession.curStonesLeftInfo[4]}"/>
+                </StackPanel>
+                <StackPanel Grid.Row="1" Grid.Column="3" Style="{StaticResource stackpanel_cc_horizontal}" Margin="3">
+                    <Image Margin="3" Source="{StaticResource special_uri}" Tag="{x:Static enums:Stones.Special}"
+                           DataContext="{Binding Path=curGameSession.curStonesLeftInfo[5]}" Style="{StaticResource LeftStoneIndicator_image}"
+                           MouseEnter="LeftStoneImage_MouseEnter" MouseLeave="LeftStoneImage_MouseLeave" 
+                           MouseLeftButtonDown="LeftStoneImage_MouseLeftButtonDown"
+                           MouseRightButtonDown="LeftStoneImage_MouseRightButtonDown"/>
+                    <TextBlock Style="{StaticResource LeftStonesIndicator_textblock}"
+                               DataContext="{Binding Path=curGameSession.curStonesLeftInfo[5]}"/>
+                </StackPanel>
+
+                <Rectangle Grid.Row="0" Grid.Column="4" Grid.RowSpan="2" Width="1" Margin="0,3,0,3" Fill="Gray" />
+
+                <TextBlock Grid.Row="0" Grid.Column="5" Margin="3" Style="{StaticResource CurrentGamePhase_textblock}"/>
+                <Button Content="게임 시작" Grid.Row="0" Grid.Column="6" Margin="3" Style="{StaticResource GameStart_button}"/>
+                <Button Content="페이즈 종료" Grid.Row="0" Grid.Column="7" Margin="3" Style="{StaticResource NextPhase_button}"/>
+
+                <ProgressBar Grid.Row="1" Grid.Column="5" Style="{StaticResource prograssbar_prograssbar}"/>
+                <TextBlock Grid.Row="1" Grid.Column="5" Style="{StaticResource prograssbar_textblock}"/>
+                <Button Content="다음 수 계산" Grid.Row="1" Grid.Column="6" Margin="3" Style="{StaticResource ExpectOptimizedStone_button}"
+                        IsDefault="True"/>
+                <Button Content="게임 초기화" Grid.Row="1" Grid.Column="7" Margin="3" Style="{StaticResource GameReset_button}"/>
+                
+                
+            </Grid>
+        </Grid>
+    </DockPanel>
+</Window>
