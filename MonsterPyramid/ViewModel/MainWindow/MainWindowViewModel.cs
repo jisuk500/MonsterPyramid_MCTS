@@ -43,6 +43,8 @@ namespace MonsterPyramid.ViewModel.MainWindow
         public string progressbarText { get; set; }
         public bool progressbarProcessing { get; set; }
 
+        public ObservableCollection<bool> Menu_ExpectationTime { get; set; }
+
         public MainWindowViewModel()
         {
             curGameSession = new GameSession(GameNum);
@@ -55,7 +57,13 @@ namespace MonsterPyramid.ViewModel.MainWindow
 
             InitializeCommands();
 
-            
+            Menu_ExpectationTime = new ObservableCollection<bool>();
+            for (int i = 0; i < 5; i++)
+            {
+                Menu_ExpectationTime.Add(false);
+            }
+            Menu_ExpectationTime[4] = true;
+
         }
 
         
@@ -530,8 +538,15 @@ namespace MonsterPyramid.ViewModel.MainWindow
         /// </summary>
         private void boardCellStoneEstimationEmphasize()
         {
+
             if(MCTSResult.estimatedPosition.position<=35)
             {
+                foreach (var a in curGameSession.curBoardData.BoardCellState)
+                {
+                    a.estimatedStone = Stones.None;
+                    a.cellEstimation = false;
+                }
+
                 curGameSession.curBoardData.BoardCellState[MCTSResult.estimatedPosition.position].estimatedStone
                 = (Stones)MCTSResult.estimatedPosition.stone;
                 curGameSession.curBoardData.BoardCellState[MCTSResult.estimatedPosition.position].cellEstimation = true;

@@ -75,7 +75,7 @@ namespace MonsterPyramid.Model.MCTS
         /// <summary>
         /// 자식 노드를 생성하기에 필요한 최소 시뮬레이션 횟수 카운트
         /// </summary>
-        public static int minimumChildrenSimulationCount = 1;
+        public static int minimumChildrenSimulationCount = 100;
         /// <summary>
         /// 플레이어들의 배치 정보
         /// </summary>
@@ -99,13 +99,25 @@ namespace MonsterPyramid.Model.MCTS
 
         private static List<MCTSNode> simulationList = new List<MCTSNode>();
         private static ConcurrentQueue<simResult> simulationResultQueue = new ConcurrentQueue<simResult>();
+        private static int MaxMillisec = 4500;
 
         /// <summary>
         /// 맨 위 최상위 마스터 노드. 현재 게임판의 정보가 그대로 들어감
         /// </summary>
         private static MCTSNode MasterNode = new MCTSNode();
 
+        
+
         //----------------퍼블릭 함수들
+
+        /// <summary>
+        /// 최대 계산시간 지정
+        /// </summary>
+        /// <param name="maxMillisec"></param>
+        public static void setMaxMillsec(int maxMillisec)
+        {
+            MaxMillisec = maxMillisec;
+        }
 
         /// <summary>
         /// 게임 세션으로부터 mcts node를 만드는 함수
@@ -122,15 +134,17 @@ namespace MonsterPyramid.Model.MCTS
             MCTSNode new_startNode = new MCTSNode();
             new_startNode.setNodeStateFromGameSession(gamesession_);
             MasterNode = new_startNode;
-
             
         }
 
         /// <summary>
         /// 하나의 MCTS 싸이클을 돌리는 함수
+        /// <paramref name="maxMillisec">최대 계산 밀리초, -1이하시 자체 세팅값으로</paramref>
         /// </summary>
         public static EstimationResult doEstimation(int maxMillisec)
         {
+            if (maxMillisec <= -1) maxMillisec = MaxMillisec;
+
             simulationList = new List<MCTSNode>();
 
             MCTSNode node;
@@ -138,7 +152,7 @@ namespace MonsterPyramid.Model.MCTS
             getMasterNodeReady();
 
             var startTime = DateTime.Now;
-            TimeSpan fiveSec;
+            TimeSpan elapsedTime;
 
             int i = 0;
 
@@ -152,10 +166,8 @@ namespace MonsterPyramid.Model.MCTS
 
                 backpropagation(simulationResultQueue);
 
-                fiveSec = DateTime.Now - startTime;
-                if (fiveSec.TotalMilliseconds>= maxMillisec) break;
-                //i++;
-                //if (i > 3000) break;
+                elapsedTime = DateTime.Now - startTime;
+                if (elapsedTime.TotalMilliseconds>= maxMillisec) break;
             }
 
             
@@ -206,6 +218,7 @@ namespace MonsterPyramid.Model.MCTS
         /// </summary>
         private static bool expansion(MCTSNode currentNode,ref List<MCTSNode> expandedChildrens)
         {
+
             if(currentNode.makeChildren() == false)
             {
                 expandedChildrens = new List<MCTSNode>();
@@ -496,7 +509,7 @@ namespace MonsterPyramid.Model.MCTS
             }
             else
             {
-                this.UCT = win - visiting;
+                this.UCT = -win - visiting;
             }
 
             needUCTUpdateFlag = false;
@@ -842,11 +855,11 @@ namespace MonsterPyramid.Model.MCTS
                 
                 if (leaderboards[1].player == 2)
                 {
-                    winCount = 0.5f -0.01f * (leaderboards[0].score - leaderboards[1].score);
+                    winCount = 0.0f -0.01f * (leaderboards[0].score - leaderboards[1].score);
                 }
                 else
                 {
-                    winCount = -0.01f * (leaderboards[0].score - leaderboards[2].score);
+                    winCount = -1.0f -0.01f * (leaderboards[0].score - leaderboards[2].score);
                 }
                 
                 //winCount = 0;

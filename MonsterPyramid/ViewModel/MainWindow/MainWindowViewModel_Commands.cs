@@ -38,6 +38,9 @@ namespace MonsterPyramid.ViewModel.MainWindow
             GameNextPhaseCommand = new DelegateCommand(GameNextPhaseCommand_Execute, GameNextPhaseCommand_CanExecute);
             GameResetCommand = new DelegateCommand(GameResetCommand_Execute, GameResetCommand_CanExecute);
             ExpectOptimizedStone = new DelegateCommand(ExpectOptimizedStone_Execute, ExpectOptimizedStone_CanExecute);
+
+            //메뉴 관련
+            ChangeExpectationMaxTime = new DelegateCommand(ChangeExpactationMaxTime_Execute, ChangeExpactationMaxTime_CanExecute);
         }
 
         
@@ -293,12 +296,32 @@ namespace MonsterPyramid.ViewModel.MainWindow
             return false;
         }
 
+        //계산시간 수정 메뉴 클릭 커멘드
+        public DelegateCommand ChangeExpectationMaxTime { get; set; }
+        private void ChangeExpactationMaxTime_Execute(object obj)
+        {
+            int calcMillisec = Int32.Parse((string)obj);
+
+            MCTS.setMaxMillsec(calcMillisec);
+            for (int i = 0; i < this.Menu_ExpectationTime.Count; i++)
+            {
+                this.Menu_ExpectationTime[i] = false;
+            }
+
+            this.Menu_ExpectationTime[(calcMillisec / 1000) - 1] = true;
+
+        }
+        private bool ChangeExpactationMaxTime_CanExecute(object obj)
+        {
+            return true;
+        }
+
 
 
         //-----------돌 계산을 위한 백그라운드 워커 쓰레드 이벤트
         private void MCTSBackgrounWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            /**
+            
             MessageBox.Show("현재 상태 총 시뮬레이션 횟수 : " + MCTSResult.masterNodeTotalCount.ToString() + "\n"
                 + "현재 상태 총 승률 : " + MCTSResult.masterNodeTotalWin.ToString() + "\n"
                 + "다음 상태 총 시뮬레이션 횟수 : " + MCTSResult.resultNodeTotalCount.ToString() + "\n"
@@ -306,7 +329,7 @@ namespace MonsterPyramid.ViewModel.MainWindow
                 + "최대 탐색 트리 깊이 : " + MCTSResult.maximumDepth.ToString() + "\n"
                 + "추정된 돌 : " + MCTSResult.estimatedPosition.stone.ToString() + "\n"
                 + "추정된 셀 위치 : " + MCTSResult.estimatedPosition.position.ToString() + "\n", "예측된 것");
-            **/
+            
             boardCellStoneEstimationEmphasize();
 
             float currentProb = MCTSResult.masterNodeTotalWin / MCTSResult.masterNodeTotalCount;
@@ -317,7 +340,7 @@ namespace MonsterPyramid.ViewModel.MainWindow
 
         private void MCTSBackgrounWorker_DoWork(object sender, DoWorkEventArgs e)
         {
-            MCTSResult = MCTS.doEstimation(4500);
+            MCTSResult = MCTS.doEstimation(-1);
         }
     }
 }

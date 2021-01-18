@@ -39,11 +39,16 @@
             </MenuItem>
             <MenuItem Header="MCTS AI">
                 <MenuItem Header="계산시간">
-                    <MenuItem Header="1초"/>
-                    <MenuItem Header="2초"/>
-                    <MenuItem Header="3초"/>
-                    <MenuItem Header="4초"/>
-                    <MenuItem Header="5초"/>
+                    <MenuItem Header="1초" Command="{Binding ChangeExpectationMaxTime}" CommandParameter="1000"
+                              IsCheckable="False" IsChecked="{Binding Path=Menu_ExpectationTime[0]}"/>
+                    <MenuItem Header="2초" Command="{Binding ChangeExpectationMaxTime}" CommandParameter="2000" 
+                              IsCheckable="False" IsChecked="{Binding Path=Menu_ExpectationTime[1]}"/>
+                    <MenuItem Header="3초" Command="{Binding ChangeExpectationMaxTime}" CommandParameter="3000" 
+                              IsCheckable="False" IsChecked="{Binding Path=Menu_ExpectationTime[2]}"/>
+                    <MenuItem Header="4초" Command="{Binding ChangeExpectationMaxTime}" CommandParameter="4000" 
+                              IsCheckable="False" IsChecked="{Binding Path=Menu_ExpectationTime[3]}"/>
+                    <MenuItem Header="5초" Command="{Binding ChangeExpectationMaxTime}" CommandParameter="5000" 
+                              IsCheckable="False" IsChecked="{Binding Path=Menu_ExpectationTime[4]}"/>
                 </MenuItem>
             </MenuItem>
         </Menu>
